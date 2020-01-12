@@ -4,6 +4,8 @@ org 0x7C00
 %define BG_COLOR 0x01 ; blue
 %define PIPE_SPACING 0x0A ; distance between pipes
 
+%define JUMP_KEY 0x48 ; up arrow
+
 boot:
 	; set video mode to 40x25 16-color
 	MOV AH, 0x00
@@ -21,8 +23,30 @@ boot:
 	MOV CH, 0x3F
 	INT 0x10
 
-	; move cursor to start position
-	CALL draw_bird
+loop:
+	; main game loop
+	
+.input:
+	; check input keystroke
+	MOV AH, 0x01
+	INT 0x16
+	JZ loop.process_game
+
+	; get the key
+	MOV AH, 0x00
+	INT 0x16
+
+.chkpress:
+	; check whether the 'jump' key was pressed
+	CMP AH, JUMP_KEY
+	JNE loop.process_game
+
+	CALL jump_bird
+
+.process_game:
+	; update game state, draw graphics
+	
+	JMP loop.input
 
 halt:
 	CLI
@@ -47,6 +71,17 @@ draw_bird:
 	MOV BL, 0x0E
 	MOV CX, 1
 	INT 0x10
+
+	POPA
+	RET
+
+jump_bird:
+	PUSHA
+
+	MOV AL, [birdy]
+	SUB AL, 1
+	MOV [birdy], AL
+	CALL draw_bird
 
 	POPA
 	RET
