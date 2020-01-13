@@ -69,8 +69,6 @@ boot:
 	CMP DX, NUM_PIPES
 	JL boot.pipeinitloop
 
-
-
 	CALL draw_bird
 
 loop:
@@ -170,17 +168,25 @@ end_game:
 ; game functions
 ;
 
+move_curs:
+	; move the cursor to the specified position
+	; DH -> row
+	; DL -> col
+	MOV AH, 0x02
+	MOV BH, 0x00
+	INT 0x10
+
+	RET
+
 draw_bird:
 	; draw the bird at birdx and birdy
 	; returns nothing
 	PUSHA
 
 	; set the cursor position
-	MOV AH, 0x02
-	MOV BH, 0x00
 	MOV DH, [birdy]
 	MOV DL, [birdx]
-	INT 0x10
+	CALL move_curs
 
 	; draw the bird
 	MOV AH, 0x09
@@ -223,19 +229,13 @@ move_bird:
 	JE move_bird.return
 
 	; draw blank at current location
-	MOV AH, 0x02
-	MOV BH, 0x00
-	MOV DH, [birdy]
-	MOV DL, [birdx]
-	INT 0x10
+	CALL move_curs
 
 	PUSH CX
-
 	MOV AH, 0x0A
 	MOV AL, ' '
 	MOV CX, 1
 	INT 0x10
-
 	POP CX
 
 	; set the bird's game location to the new location
@@ -249,7 +249,6 @@ move_bird:
 
 	POPA
 	RET
-
 
 move_pipe:
 	; move a pipe from one location to another
@@ -276,9 +275,7 @@ move_pipe:
 
 	PUSH BX
 .blankloop:
-	MOV AH, 0x02
-	MOV BH, 0x00
-	INT 0x10
+	CALL move_curs
 
 	; draw blank	
 	MOV AH, 0x09
@@ -362,9 +359,7 @@ draw_pipe:
 
 .pipeloop:
 	; move cursor to pipe pos
-	MOV AH, 0x02
-	MOV BH, 0x00
-	INT 0x10
+	CALL move_curs
 
 	; check whether this is a hole
 	CMP DH, CL
@@ -375,7 +370,6 @@ draw_pipe:
 	; if we make it here, we're in a hole
 	JMP draw_pipe.increment
 	
-
 .drawsolid:
 	MOV AH, 0x09
 	MOV AL, ' '
@@ -399,8 +393,8 @@ draw_pipe:
 
 ; game data
 ; bird position
-birdx: db START_COL
 birdy: db START_ROW
+birdx: db START_COL
 
 ; bird vertical velocity
 birdvy: db 0
