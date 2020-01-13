@@ -38,12 +38,6 @@ boot:
 	MOV CH, 0x3F
 	INT 0x10
 
-	; initialize bird position
-	MOV AL, START_ROW
-	MOV [birdy], AL
-	MOV AL, START_COL
-	MOV [birdx], AL
-
 	; initialize pipes
 	MOV BX, pipes
 	MOV DX, 0
@@ -57,11 +51,6 @@ boot:
 
 	MOV [BX], AL
 	ADD BX, 1
-
-	; set the pipe's "hole" position
-	;\TODO random hole positions
-	MOV AL, 4
-	MOV [BX], AL
 
 	ADD BX, 1
 	ADD DX, 1
@@ -88,7 +77,8 @@ loop:
 	CMP AH, JUMP_KEY
 	JNE loop.process_game
 
-	CALL jump_bird
+	MOV AL, JUMP_VEL
+	MOV [birdvy], AL
 
 .process_game:
 	; update game state, draw graphics
@@ -151,6 +141,7 @@ loop:
 	JMP end_game
 
 .delay:
+	CALL draw_score
 	; delay
 	MOV CX, 0x01
 	MOV DX, 0x86A0
@@ -161,7 +152,6 @@ loop:
 
 end_game:
 	JMP end_game
-
 
 
 ;
@@ -190,10 +180,28 @@ draw_character:
 
 	RET
 
+draw_score:
+	MOV DH, 0x00
+	MOV DL, 0x00
+	CALL move_curs
+
+	MOV AH, 0x09
+	MOV CX, 1
+
+	MOV BL, [score]
+	MOV BH, 0
+	AND BL, 0x0F
+	ADD BX, HEXDIGITS
+	MOV AL, [BX]
+	MOV BH, 0x00
+	MOV BL, 0x0F
+	INT 0x10
+
+	RET
+
 draw_bird:
 	; draw the bird at birdx and birdy
 	; returns nothing
-	PUSHA
 
 	; set the cursor position
 	MOV DH, [birdy]
@@ -205,17 +213,7 @@ draw_bird:
 	MOV BL, 0x0E
 	CALL draw_character
 
-	POPA
 	RET 
-
-jump_bird:
-	PUSH AX
-
-	MOV AL, JUMP_VEL
-	MOV [birdvy], AL
-
-	POP AX
-	RET
 
 move_bird:
 	; move the bird to a new location
@@ -313,7 +311,7 @@ move_pipe:
 	MOV AL, [BX]
 	SUB BX, HLIST
 	ADD BX, 1
-	CMP BX, 10
+	CMP BX, 7
 	JGE move_pipe.zrand
 	MOV [hidx], BX
 	JMP move_pipe.randomdone
@@ -322,6 +320,13 @@ move_pipe:
 	MOV [hidx], CX
 
 .randomdone:
+	; increment score
+	MOV CL, [score]
+	ADD CL, 1
+	MOV [score], CL
+	CMP CL, 0x0F
+	JGE end_game
+
 	POP CX
 	POP BX
 .dodraw:
@@ -389,7 +394,7 @@ draw_pipe:
 
 
 ; game data
-score: db 0
+score: db 0x00
 
 ; bird position
 birdy: db START_ROW
@@ -405,11 +410,11 @@ pipes: times NUM_PIPES*2 db 0
 hidx: db 0
 
 HLIST:
-db 13, 9, 3, 8, 10, 4, 14, 2, 1, 14, 0
+db 13, 9, 3, 8, 15, 7, 13
 
-;HEXDIGITS:
-;db '0', '1', '2', '3', '4', '5', '6', '7'
-;db '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+HEXDIGITS:
+db '0', '1', '2', '3', '4', '5', '6', '7'
+db '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
 
 times 510 - ($-$$) db 0 ; pad with zeroes to 510 bytes
 dw 0xAA55 ; bootloader magic

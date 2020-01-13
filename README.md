@@ -2,7 +2,7 @@
 
 ![floppyboot](https://i.postimg.cc/XvhKG8Pr/screenshot.png)
 
-floppyboot is a bootable Flappy Bird clone written in x86 Assembly, fitting entirely within the boot sector. The assembled binary is only 490 bytes (padded to 512 to make it bootable). I'm planning on finding ways to make it smaller so I can add more features like scoring.
+floppyboot is a bootable Flappy Bird clone written in x86 Assembly, fitting entirely within the boot sector. The assembled binary is currently exactly 512 bytes. If your score reaches 16, you win!
 
 Use the up arrow key to jump!
 
