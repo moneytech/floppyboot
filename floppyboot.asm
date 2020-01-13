@@ -178,6 +178,18 @@ move_curs:
 
 	RET
 
+draw_character:
+	; AL->character to draw
+	; BL->attributes
+	MOV AH, 0x09
+	MOV BH, 0x00
+	PUSH CX
+	MOV CX, 1
+	INT 0x10
+	POP CX
+
+	RET
+
 draw_bird:
 	; draw the bird at birdx and birdy
 	; returns nothing
@@ -189,12 +201,9 @@ draw_bird:
 	CALL move_curs
 
 	; draw the bird
-	MOV AH, 0x09
-	MOV BH, 0x00
 	MOV AL, '@'
 	MOV BL, 0x0E
-	MOV CX, 1
-	INT 0x10
+	CALL draw_character
 
 	POPA
 	RET 
@@ -231,12 +240,9 @@ move_bird:
 	; draw blank at current location
 	CALL move_curs
 
-	PUSH CX
-	MOV AH, 0x0A
 	MOV AL, ' '
-	MOV CX, 1
-	INT 0x10
-	POP CX
+	MOV BL, 11
+	CALL draw_character
 
 	; set the bird's game location to the new location
 	MOV [birdy], CH
@@ -277,14 +283,10 @@ move_pipe:
 .blankloop:
 	CALL move_curs
 
-	; draw blank	
-	MOV AH, 0x09
+	; draw blank
 	MOV AL, ' '
 	MOV BL, 11
-	PUSH CX
-	MOV CX, 1
-	INT 0x10
-	POP CX
+	CALL draw_character
 
 	ADD DH, 1
 
@@ -371,14 +373,9 @@ draw_pipe:
 	JMP draw_pipe.increment
 	
 .drawsolid:
-	MOV AH, 0x09
 	MOV AL, ' '
-	MOV BH, 0x00
 	MOV BL, 0xAA
-	PUSH CX
-	MOV CX, 1
-	INT 0x10
-	POP CX
+	CALL draw_character
 
 .increment:
 	ADD DH, 1
@@ -392,6 +389,8 @@ draw_pipe:
 
 
 ; game data
+score: db 0
+
 ; bird position
 birdy: db START_ROW
 birdx: db START_COL
@@ -407,6 +406,10 @@ hidx: db 0
 
 HLIST:
 db 13, 9, 3, 8, 10, 4, 14, 2, 1, 14, 0
+
+;HEXDIGITS:
+;db '0', '1', '2', '3', '4', '5', '6', '7'
+;db '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
 
 times 510 - ($-$$) db 0 ; pad with zeroes to 510 bytes
 dw 0xAA55 ; bootloader magic
