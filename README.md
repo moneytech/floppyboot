@@ -1,6 +1,6 @@
 # floppyboot
 
-![floppyboot](https://i.postimg.cc/XvhKG8Pr/screenshot.png)
+![floppyboot](https://i.postimg.cc/6p8LBBnX/screenshot2.png)
 
 floppyboot is a bootable Flappy Bird clone written in x86 Assembly, fitting entirely within the boot sector. The assembled binary is currently exactly 512 bytes. If your score reaches 16, you win!
 
